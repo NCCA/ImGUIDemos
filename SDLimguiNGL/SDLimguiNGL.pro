@@ -28,7 +28,7 @@ CONFIG-=app_bundle
 SOURCES+= $$PWD/src/NGLDraw.cpp    \
           $$PWD/../imgui/src/imgui.cpp \
           $$PWD/../imgui/src/imgui_draw.cpp \
-          $$PWD/src/imgui_impl_sdl_gl3.cpp \
+          $$PWD/src/ImGUIImpl.cpp \
           $$PWD/../imgui/src/ColourPicker.cpp \
           $$PWD/src/main.cpp
 # same for the .h files
@@ -39,7 +39,7 @@ HEADERS+= $$PWD/include/NGLDraw.h \
           $$PWD/../imgui/include/imconfig.h \
           $$PWD/../imgui/include/imgui_internal.h \
           $$PWD/../imgui/include/stb_textedit.h \
-          $$PWD/include/imgui_impl_sdl_gl3.h
+          $$PWD/include/ImGUIImpl.h
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include

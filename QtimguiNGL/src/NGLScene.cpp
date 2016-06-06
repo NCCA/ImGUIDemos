@@ -9,6 +9,10 @@
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
 #include <ngl/NGLStream.h>
+#include <imgui.h>
+#include "ImGUIImpl.h"
+extern bool ColorSelector(const char* pLabel, ngl::Vec4& oRGBA);
+
 //----------------------------------------------------------------------------------------------------------------------
 /// @brief the increment for x/y translation with mouse movement
 //----------------------------------------------------------------------------------------------------------------------
@@ -99,8 +103,7 @@ void NGLScene::initializeGL()
   // First create Values for the camera position
   ngl::Vec3 from(0,1,1);
   ngl::Vec3 to(0,0,0);
-  ngl::Vec3 up=(0,1,0);
-  std::cout<<"up "<<up<<"\n";
+  ngl::Vec3 up(0,1,0);
   // now load to our new camera
   m_cam.set(from,to,up);
   // set the shape using FOV 45 Aspect Ratio based on Width and Height
@@ -116,7 +119,72 @@ void NGLScene::initializeGL()
   light.setTransform(iv);
   // load these values to the shader as well
   light.loadToShader("light");
+
+  ImGui_ImplQt_Init();
+
 }
+
+void NGLScene::drawIMGUI()
+{
+
+
+  ImGui_ImplQt_NewFrame(this);
+  if(showModelControls)
+  {
+      static ngl::Vec3 rot(0,0,0);
+      static ngl::Vec3 pos(0,0,0);
+      static ngl::Vec3 scale(1,1,1);
+      static ngl::Vec4 clearColour= {0.5,0.5,0.5,1.0};
+
+      ImGui::Begin("Model");
+      ImGui::SliderFloat3("rotation",rot.openGL(),-180.0f,180.f);
+      ImGui::SliderFloat3("position",pos.openGL(),-10.0f,10.f);
+      ImGui::SliderFloat3("scale",scale.openGL(),-2.0f,2.f);
+
+      //ImGui::ColorEdit3("clear color", clearColour.openGL());
+      ColorSelector("clear color",clearColour);
+      const char* items[]={ "Teapot", "Troll", "Bunny", "Dragon", "Buddah", "Cube" };
+      static int modelID = 0;
+      ImGui::Combo("Model", &modelID, items,6);   // Combo using proper array. You can also pass a callback to retrieve array value, no need to create/copy an array just for that.
+
+      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+      glClearColor(clearColour.m_r,clearColour.m_g,clearColour.m_b,clearColour.m_a);
+      ImGui::End();
+
+  }
+  if(showLightControls)
+  {
+      static ngl::Vec4 position={-2.0f,5.0f,2.0f};
+      static ngl::Vec4 ambient={0.0f,0.0f,0.0f};
+      static ngl::Vec4 specular={1.0f,1.0f,1.0f};
+      static ngl::Vec4 diffuse={1.0f,1.0f,1.0f};
+      ImGui::Begin("Light");
+      ImGui::SliderFloat3("position",position.openGL(),-10,10);
+      ImGui::ColorEdit3("Ambient", ambient.openGL());
+      ImGui::ColorEdit3("Specular", specular.openGL());
+      ImGui::ColorEdit3("Diffuse", diffuse.openGL());
+      ImGui::End();
+
+  }
+  if(showMaterialControls)
+  {
+      static ngl::Vec4 ambient={0.274725f,0.1995f,0.0745f};
+      static ngl::Vec4 specular={0.628281f, 0.555802f,0.3666065f};
+      static ngl::Vec4 diffuse={0.75164f,0.60648f,0.22648f};
+      static float specPower=51.2f;
+      ImGui::Begin("Material");
+      ImGui::ColorEdit3("Ambient", ambient.openGL());
+      ImGui::ColorEdit3("Specular", specular.openGL());
+      ImGui::ColorEdit3("Diffuse", diffuse.openGL());
+      ImGui::SliderFloat("Cos Power", &specPower,0.0f,200.0f);
+
+      ImGui::End();
+
+  }
+  ImGui::Render();
+
+}
+
 
 
 void NGLScene::loadMatricesToShader()
@@ -166,13 +234,28 @@ void NGLScene::paintGL()
   // draw
   loadMatricesToShader();
   prim->draw("teapot");
+  drawIMGUI();
 
+}
+
+
+void NGLScene::setMouseState(QMouseEvent *_event)
+{
+  for(auto &b : m_mouseButtons)
+    b=false;
+  if(_event->buttons() == Qt::LeftButton)
+    m_mouseButtons[0]=true;
+  if(_event->buttons() == Qt::RightButton)
+    m_mouseButtons[1]=true;
+  if(_event->buttons() == Qt::MiddleButton)
+    m_mouseButtons[2]=true;
 
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mouseMoveEvent (QMouseEvent * _event)
 {
+  setMouseState(_event);
   // note the method buttons() is the button state when event was called
   // that is different from button() which is used to check which button was
   // pressed when the mousePress/Release event is generated
@@ -205,6 +288,7 @@ void NGLScene::mouseMoveEvent (QMouseEvent * _event)
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mousePressEvent ( QMouseEvent * _event)
 {
+  setMouseState(_event);
   // that method is called when the mouse button is pressed in this case we
   // store the value where the maouse was clicked (x,y) and set the Rotate flag to true
   if(_event->button() == Qt::LeftButton)
@@ -226,6 +310,7 @@ void NGLScene::mousePressEvent ( QMouseEvent * _event)
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mouseReleaseEvent ( QMouseEvent * _event )
 {
+  setMouseState(_event);
   // that event is called when the mouse button is released
   // we then set Rotate to false
   if (_event->button() == Qt::LeftButton)

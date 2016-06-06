@@ -8,6 +8,7 @@ ImVec4 nglColorToImVec4(const ngl::Vec4 &_c)
   return   ImVec4(_c.m_r,_c.m_g,_c.m_b,_c.m_a);
 }
 
+
 bool ColorSelector(const char* pLabel, ngl::Vec4 &oRGBA)
 {
 	const ImU32 c_oColorGrey = ImGui::ColorConvertFloat4ToU32(ImVec4(0.75f,0.75f,0.75f,1.f));
@@ -293,3 +294,14 @@ bool ColorSelector(const char* pLabel, ngl::Vec4 &oRGBA)
 	ImGui::PopID();
 	return bRet;
 }
+
+bool ColorSelector(const char* pLabel, ngl::Vec3 &oRGB)
+{
+  ngl::Vec4 newRGB(oRGB);
+  ColorSelector(pLabel,newRGB);
+  oRGB.m_r=newRGB.m_r;
+  oRGB.m_r=newRGB.m_g;
+  oRGB.m_r=newRGB.m_b;
+
+}
+

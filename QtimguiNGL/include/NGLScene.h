@@ -5,6 +5,7 @@
 #include <ngl/Light.h>
 #include <ngl/Text.h>
 #include <QOpenGLWindow>
+#include <array>
 
 //----------------------------------------------------------------------------------------------------------------------
 /// @file NGLScene.h
@@ -48,6 +49,7 @@ public:
     void resizeGL(QResizeEvent *_event);
     // Qt 5.x uses this instead! http://doc.qt.io/qt-5/qopenglwindow.html#resizeGL
     void resizeGL(int _w, int _h);
+    bool getMouseButton(unsigned int _b){return m_mouseButtons[_b];}
 
 private:
     //----------------------------------------------------------------------------------------------------------------------
@@ -135,7 +137,12 @@ private:
     //----------------------------------------------------------------------------------------------------------------------
     void wheelEvent( QWheelEvent *_event);
 
-
+    bool showModelControls=true;
+    bool showLightControls=true;
+    bool showMaterialControls=true;
+    void drawIMGUI();
+    std::array<bool,3> m_mouseButtons;
+    void setMouseState(QMouseEvent * _event);
 };
 
 

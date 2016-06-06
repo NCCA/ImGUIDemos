@@ -5,7 +5,7 @@
 #include <ngl/NGLInit.h>
 #include <array>
 #include <imgui.h>
-#include "imgui_impl_sdl_gl3.h"
+#include "ImGUIImpl.h"
 extern bool ColorSelector(const char* pLabel, ngl::Vec4& oRGBA);
 
 /// @brief function to quit SDL with error message
@@ -34,8 +34,8 @@ int main()
   SDL_Window *window=SDL_CreateWindow("SDL NGL and imgui",
                                       SDL_WINDOWPOS_CENTERED,
                                       SDL_WINDOWPOS_CENTERED,
-                                      rect.w/2,
-                                      rect.h/2,
+                                      1024,
+                                      720,
                                       SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
                                      );
   // check to see if that worked or exit
@@ -126,9 +126,9 @@ int main()
           static ngl::Vec4 diffuse={1.0f,1.0f,1.0f};
           ImGui::Begin("Light");
           ImGui::SliderFloat3("position",position.openGL(),-10,10);
-          ImGui::ColorEdit3("Ambient", ambient.openGL());
-          ImGui::ColorEdit3("Specular", specular.openGL());
-          ImGui::ColorEdit3("Diffuse", diffuse.openGL());
+          ColorSelector("Ambient", ambient);
+          ColorSelector("Specular", specular);
+          ColorSelector("Diffuse", diffuse);
           ngl.setLight(position,ambient,specular,diffuse);
           ImGui::End();
 
@@ -140,9 +140,9 @@ int main()
           static ngl::Vec4 diffuse={0.75164f,0.60648f,0.22648f};
           static float specPower=51.2f;
           ImGui::Begin("Material");
-          ImGui::ColorEdit3("Ambient", ambient.openGL());
-          ImGui::ColorEdit3("Specular", specular.openGL());
-          ImGui::ColorEdit3("Diffuse", diffuse.openGL());
+          ColorSelector("Ambient", ambient);
+          ColorSelector("Specular", specular);
+          ColorSelector("Diffuse", diffuse);
           ImGui::SliderFloat("Cos Power", &specPower,0.0f,200.0f);
 
           ngl.setMaterial(ambient,specular,diffuse,specPower);
@@ -183,16 +183,16 @@ int main()
             case SDLK_f :
             SDL_SetWindowFullscreen(window,SDL_TRUE);
             glViewport(0,0,rect.w,rect.h);
-            case SDLK_m : showModelControls^=true; break;
             break;
+            case SDLK_m : showModelControls^=true; break;
 
             case SDLK_g : SDL_SetWindowFullscreen(window,SDL_FALSE); break;
             default : break;
           } // end of key process
         } // end of keydown
 
-        default : break;
       } // end of event switch
+
       } // end of not want from IO
     } // end of poll events
 
