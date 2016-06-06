@@ -26,23 +26,25 @@ MOC_DIR=moc
 CONFIG-=app_bundle
 # Auto include all .cpp files in the project src directory (can specifiy individually if required)
 SOURCES+= $$PWD/src/NGLDraw.cpp    \
-          $$PWD/src/imgui.cpp \
-          $$PWD/src/imgui_draw.cpp \
+          $$PWD/../imgui/src/imgui.cpp \
+          $$PWD/../imgui/src/imgui_draw.cpp \
           $$PWD/src/imgui_impl_sdl_gl3.cpp \
-          $$PWD/src/ColourPicker.cpp \
+          $$PWD/../imgui/src/ColourPicker.cpp \
           $$PWD/src/main.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/NGLDraw.h \
-          $$PWD/include/imgui.h \
-          $$PWD/include/stb_rect_pack.h \
-          $$PWD/include/stb_truetype.h \
-          $$PWD/include/imconfig.h \
-          $$PWD/include/imgui_internal.h \
-          $$PWD/include/stb_textedit.h \
+          $$PWD/../imgui/include/imgui.h \
+          $$PWD/../imgui/include/stb_rect_pack.h \
+          $$PWD/../imgui/include/stb_truetype.h \
+          $$PWD/../imgui/include/imconfig.h \
+          $$PWD/../imgui/include/imgui_internal.h \
+          $$PWD/../imgui/include/stb_textedit.h \
           $$PWD/include/imgui_impl_sdl_gl3.h
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
+INCLUDEPATH +=../imgui/include
+
 # where our exe is going to live (root of project)
 DESTDIR=./
 # add the glsl shader files
