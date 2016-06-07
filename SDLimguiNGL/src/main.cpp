@@ -107,7 +107,9 @@ int main()
           const char* items[]={ "Teapot", "Troll", "Bunny", "Dragon", "Buddah", "Cube" };
           static int modelID = 0;
           ImGui::Combo("Model", &modelID, items,6);   // Combo using proper array. You can also pass a callback to retrieve array value, no need to create/copy an array just for that.
-
+          bool wireframe=ngl.getWireFrame();
+          ImGui::Checkbox("Wireframe",&wireframe);
+          ngl.setWireFrame(wireframe);
           ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
           glClearColor(clearColour.m_r,clearColour.m_g,clearColour.m_b,clearColour.m_a);
           ngl.setModelRotation(rot);
@@ -178,8 +180,8 @@ int main()
           {
             // if it's the escape key quit
             case SDLK_ESCAPE :  quit = true; break;
-            case SDLK_w : glPolygonMode(GL_FRONT_AND_BACK,GL_LINE); break;
-            case SDLK_s : glPolygonMode(GL_FRONT_AND_BACK,GL_FILL); break;
+            case SDLK_w : ngl.setWireFrame(true); break;
+            case SDLK_s : ngl.setWireFrame(false); break;
             case SDLK_f :
             SDL_SetWindowFullscreen(window,SDL_TRUE);
             glViewport(0,0,rect.w,rect.h);

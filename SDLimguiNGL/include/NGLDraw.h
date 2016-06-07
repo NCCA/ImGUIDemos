@@ -32,7 +32,8 @@ class NGLDraw
     void setModelID(int _id){m_modelID=_id;}
     void setLight(const ngl::Vec4 &_position, const ngl::Vec4 &_ambient, const ngl::Vec4 &_specular, const ngl::Vec4 &_diffuse );
     void setMaterial(const ngl::Vec4 &_ambient, const ngl::Vec4 &_specular, const ngl::Vec4 &_diffus, float _specPower );
-
+    void setWireFrame(bool _w){m_wireframe=_w;}
+    bool getWireFrame() const {return m_wireframe;}
     //----------------------------------------------------------------------------------------------------------------------
     /// @brief this method is called every time a mouse is moved
     /// @param _event the SDL mouse event structure containing all mouse info
@@ -109,6 +110,8 @@ class NGLDraw
     ngl::Vec3 m_modelScale={1.0f,1.0f,1.0f};
     ngl::Vec3 m_modelPosition={0.0f,0.0f,0.0f};
     int m_modelID=0;
+    ngl::Mat4 m_localScale;
+    bool m_wireframe=false;
 
 
 };

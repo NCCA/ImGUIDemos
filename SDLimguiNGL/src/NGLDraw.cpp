@@ -101,16 +101,21 @@ void NGLDraw::draw()
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   // draw
   loadMatricesToShader();
+  if(m_wireframe)
+    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
+  else
+    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
   switch(m_modelID)
    {
-    case 0 : prim->draw("teapot"); break;
-    case 1 : prim->draw("troll"); break;
-    case 2 : prim->draw("bunny"); break;
-    case 3 : prim->draw("dragon"); break;
-    case 4 : prim->draw("buddah"); break;
-    case 5 : prim->draw("cube"); break;
+    case 0 : m_localScale.scale(1.0f, 1.0f, 1.0f); prim->draw("teapot"); break;
+    case 1 : m_localScale.scale(1.0f, 1.0f, 1.0f); prim->draw("troll"); break;
+    case 2 : m_localScale.scale(0.1f, 0.1f, 0.1f); prim->draw("bunny"); break;
+    case 3 : m_localScale.scale(0.1f, 0.1f, 0.1f); prim->draw("dragon"); break;
+    case 4 : m_localScale.scale(0.1f, 0.1f, 0.1f); prim->draw("buddah"); break;
+    case 5 : m_localScale.scale(1.0f, 1.0f, 1.0f); prim->draw("cube"); break;
 
   }
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 }
 
 void NGLDraw::loadMatricesToShader()
@@ -125,7 +130,7 @@ void NGLDraw::loadMatricesToShader()
   t.setRotation(m_modelRot);
   t.setPosition(m_modelPosition);
   t.setScale(m_modelScale);
-  M=t.getMatrix()*m_mouseGlobalTX;
+  M=m_localScale*t.getMatrix()*m_mouseGlobalTX;
   MV=  M*m_cam.getViewMatrix();
   MVP= M*m_cam.getVPMatrix();
   normalMatrix=MV;
