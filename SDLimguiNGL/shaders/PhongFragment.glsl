@@ -66,6 +66,7 @@ vec4 pointLight()
 return ambient + diffuse + specular;
 }
 
+uniform sampler2D Texture;
 
 
 void main ()

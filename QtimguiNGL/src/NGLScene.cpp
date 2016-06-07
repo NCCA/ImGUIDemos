@@ -256,6 +256,7 @@ void NGLScene::setMouseState(QMouseEvent *_event)
 void NGLScene::mouseMoveEvent (QMouseEvent * _event)
 {
   setMouseState(_event);
+  ImGui_ImplQt_ProcessEvent(this);
   // note the method buttons() is the button state when event was called
   // that is different from button() which is used to check which button was
   // pressed when the mousePress/Release event is generated
@@ -289,6 +290,7 @@ void NGLScene::mouseMoveEvent (QMouseEvent * _event)
 void NGLScene::mousePressEvent ( QMouseEvent * _event)
 {
   setMouseState(_event);
+  ImGui_ImplQt_ProcessEvent(this);
   // that method is called when the mouse button is pressed in this case we
   // store the value where the maouse was clicked (x,y) and set the Rotate flag to true
   if(_event->button() == Qt::LeftButton)
@@ -311,6 +313,7 @@ void NGLScene::mousePressEvent ( QMouseEvent * _event)
 void NGLScene::mouseReleaseEvent ( QMouseEvent * _event )
 {
   setMouseState(_event);
+  ImGui_ImplQt_ProcessEvent(this);
   // that event is called when the mouse button is released
   // we then set Rotate to false
   if (_event->button() == Qt::LeftButton)

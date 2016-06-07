@@ -129,11 +129,14 @@ static void ImGui_ImplQt_SetClipboardText(const char* text)
     //SDL_SetClipboardText(text);
 }
 
-bool ImGui_ImplQt_ProcessEvent()
+bool ImGui_ImplQt_ProcessEvent(NGLScene *_window)
 {
-  /*
+
     ImGuiIO& io = ImGui::GetIO();
-    switch (event->type)
+    g_MousePressed[0]=_window->getMouseButton(0);
+    g_MousePressed[1]=_window->getMouseButton(1);
+    g_MousePressed[2]=_window->getMouseButton(2);
+  /*  switch (event->type)
     {
     case SDL_MOUSEWHEEL:
         {
@@ -335,15 +338,15 @@ void ImGui_ImplQt_NewFrame(NGLScene *window)
     io.MouseDown[0]=window->getMouseButton(0);
     io.MouseDown[1]=window->getMouseButton(1);
     io.MouseDown[3]=window->getMouseButton(2);
-
     io.MousePos=ImVec2(QCursor::pos().x(),QCursor::pos().y());
+    g_MousePressed[0] = g_MousePressed[1] = g_MousePressed[2] = false;
 
     //std::cout<<"data from I<"<<_w<<" "<<_h<<io.DisplayFramebufferScale.x<<" "<<io.DisplayFramebufferScale.y<<"\n";
     // Setup time step
-   // Uint32	time = SDL_GetTicks();
+
    // double current_time = time / 1000.0;
     //io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
-    //g_Time = current_time;
+    g_Time = 0.16;
 
     // Setup inputs
     // (we already got mouse wheel, keyboard keys & characters from SDL_PollEvent())

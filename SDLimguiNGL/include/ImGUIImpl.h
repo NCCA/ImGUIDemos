@@ -8,11 +8,11 @@
 #include <SDL.h>
 #include "imgui.h"
 
-IMGUI_API bool   ImGui_ImplSdlGL3_Init(SDL_Window* window);
-IMGUI_API void   ImGui_ImplSdlGL3_Shutdown();
-IMGUI_API void   ImGui_ImplSdlGL3_NewFrame(SDL_Window* window);
-IMGUI_API bool   ImGui_ImplSdlGL3_ProcessEvent(SDL_Event* event);
+IMGUI_API bool   ImGuiImplSdlInit(SDL_Window* window);
+IMGUI_API void   ImGuiImplSdlShutdown();
+IMGUI_API void   ImGuiImplSdlNewFrame(SDL_Window* window);
+IMGUI_API bool   ImGuiImplSdlProcessEvent(SDL_Event* event);
 
 // Use if you want to reset your rendering device without losing ImGui state.
-IMGUI_API void   ImGui_ImplSdlGL3_InvalidateDeviceObjects();
-IMGUI_API bool   ImGui_ImplSdlGL3_CreateDeviceObjects();
+IMGUI_API void   ImGuiImplSdlInvalidateDeviceObjects();
+IMGUI_API bool   ImGuiImplSdlGL3CreateDeviceObjects();

@@ -11,7 +11,7 @@ IMGUI_API bool   ImGui_ImplQt_Init();
 IMGUI_API void   ImGui_ImplQt_Shutdown();
 IMGUI_API void ImGui_ImplQt_NewFrame(NGLScene *window);
 
-IMGUI_API bool   ImGui_ImplQt_ProcessEvent();
+IMGUI_API bool   ImGui_ImplQt_ProcessEvent(NGLScene *_window);
 
 // Use if you want to reset your rendering device without losing ImGui state.
 IMGUI_API void   ImGui_ImplQt_InvalidateDeviceObjects();

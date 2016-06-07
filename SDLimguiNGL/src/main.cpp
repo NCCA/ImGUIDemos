@@ -61,7 +61,7 @@ int main()
   ngl::NGLInit::instance();
 
   // Setup ImGui binding
-  ImGui_ImplSdlGL3_Init(window);
+  ImGuiImplSdlInit(window);
 
 
   // now clear the screen and swap whilst NGL inits (which may take time)
@@ -88,8 +88,8 @@ int main()
 
     while ( SDL_PollEvent(&event) )
     {
-      ImGui_ImplSdlGL3_ProcessEvent(&event);
-      ImGui_ImplSdlGL3_NewFrame(window);
+      ImGuiImplSdlProcessEvent(&event);
+      ImGuiImplSdlNewFrame(window);
       if(showModelControls)
       {
           static ngl::Vec3 rot(0,0,0);
@@ -204,6 +204,7 @@ int main()
     SDL_GL_SwapWindow(window);
 
   }
+ ImGuiImplSdlShutdown();
   // now tidy up and exit SDL
  SDL_Quit();
 }
@@ -211,7 +212,7 @@ int main()
 
 SDL_GLContext createOpenGLContext(SDL_Window *window)
 {
-  // Request an opengl 3.2 context first we setup our attributes, if you need any
+  // Request an opengl 4.1 context first we setup our attributes, if you need any
   // more just add them here before the call to create the context
   // SDL doesn't have the ability to choose which profile at this time of writing,
   // but it should default to the core profile

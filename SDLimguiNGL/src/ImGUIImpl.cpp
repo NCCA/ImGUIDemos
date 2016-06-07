@@ -28,8 +28,8 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
 {
     // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     ImGuiIO& io = ImGui::GetIO();
-    int fb_width = (io.DisplaySize.x * io.DisplayFramebufferScale.x);
-    int fb_height = (io.DisplaySize.y * io.DisplayFramebufferScale.y);
+    GLsizei fb_width = GLsizei(io.DisplaySize.x * io.DisplayFramebufferScale.x);
+    GLsizei fb_height = GLsizei(io.DisplaySize.y * io.DisplayFramebufferScale.y);
     if (fb_width == 0 || fb_height == 0)
         return;
     draw_data->ScaleClipRects(io.DisplayFramebufferScale);
@@ -61,7 +61,7 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
     glActiveTexture(GL_TEXTURE0);
 
     // Setup orthographic projection matrix
-    glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
+    glViewport(0, 0, fb_width, fb_height);
     ngl::Mat4 ortho(
          2.0f/io.DisplaySize.x, 0.0f,                   0.0f, 0.0f,
          0.0f,                  2.0f/-io.DisplaySize.y, 0.0f, 0.0f,
@@ -70,11 +70,8 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
     );
     ngl::ShaderLib *shader = ngl::ShaderLib::instance();
     shader->use("IMGUI");
-    //glUseProgram(g_ShaderHandle);
     shader->setUniform("Texture",0);
     shader->setUniform("ProjMtx",ortho);
-    //glUniform1i(g_AttribLocationTex, 0);
-    //glUniformMatrix4fv(g_AttribLocationProjMtx, 1, GL_FALSE, &ortho_projection[0][0]);
     glBindVertexArray(g_VaoHandle);
 
     for (int n = 0; n < draw_data->CmdListsCount; n++)
@@ -90,24 +87,24 @@ void ImGui_ImplSdlGL3_RenderDrawLists(ImDrawData* draw_data)
 
         for (const ImDrawCmd* pcmd = cmd_list->CmdBuffer.begin(); pcmd != cmd_list->CmdBuffer.end(); pcmd++)
         {
-            if (pcmd->UserCallback)
-            {
-                pcmd->UserCallback(cmd_list, pcmd);
-            }
-            else
-            {
-                glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
-                glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
-                glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
-            }
-            idx_buffer_offset += pcmd->ElemCount;
+          if (pcmd->UserCallback)
+          {
+            pcmd->UserCallback(cmd_list, pcmd);
+          }
+          else
+          {
+            glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->TextureId);
+            glScissor((int)pcmd->ClipRect.x, (int)(fb_height - pcmd->ClipRect.w), (int)(pcmd->ClipRect.z - pcmd->ClipRect.x), (int)(pcmd->ClipRect.w - pcmd->ClipRect.y));
+            glDrawElements(GL_TRIANGLES, (GLsizei)pcmd->ElemCount, sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, idx_buffer_offset);
+          }
+         idx_buffer_offset += pcmd->ElemCount;
         }
     }
 
     // Restore modified GL state
     glUseProgram(last_program);
     glActiveTexture(last_active_texture);
-    glBindTexture(GL_TEXTURE_2D, last_texture);
+   // glBindTexture(GL_TEXTURE_2D, last_texture);
     glBindVertexArray(last_vertex_array);
     glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, last_element_array_buffer);
@@ -130,7 +127,7 @@ static void ImGui_ImplSdlGL3_SetClipboardText(const char* text)
     SDL_SetClipboardText(text);
 }
 
-bool ImGui_ImplSdlGL3_ProcessEvent(SDL_Event* event)
+bool ImGuiImplSdlProcessEvent(SDL_Event* event)
 {
     ImGuiIO& io = ImGui::GetIO();
     switch (event->type)
@@ -195,87 +192,73 @@ void ImGui_ImplSdlGL3_CreateFontsTexture()
     glBindTexture(GL_TEXTURE_2D, last_texture);
 }
 
-bool ImGui_ImplSdlGL3_CreateDeviceObjects()
+bool ImGuiImplSdlGL3CreateDeviceObjects()
 {
-    // Backup GL state
-    GLint last_texture, last_array_buffer, last_vertex_array;
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
-    glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
-    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
-    // now to load the shader and set the values
-   // grab an instance of shader manager
-   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
-   // we are creating a shader called Phong here we create some
-   // aliases as constexpr to avoid typos later
-   constexpr auto ShaderName="IMGUI";
-   constexpr auto VertexName="IMGUIVertex";
-   constexpr auto FragmentName="IMGUIFragment";
+  // Backup GL state
+  GLint last_texture, last_array_buffer, last_vertex_array;
+  glGetIntegerv(GL_TEXTURE_BINDING_2D, &last_texture);
+  glGetIntegerv(GL_ARRAY_BUFFER_BINDING, &last_array_buffer);
+  glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &last_vertex_array);
+  // now to load the shader and set the values
+  // grab an instance of shader manager
+  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  // we are creating a shader called Phong here we create some
+  // aliases as constexpr to avoid typos later
+  constexpr auto ShaderName="IMGUI";
+  constexpr auto VertexName="IMGUIVertex";
+  constexpr auto FragmentName="IMGUIFragment";
 
-   shader->createShaderProgram(ShaderName);
-   // now we are going to create empty shaders for Frag and Vert
-   shader->attachShader(VertexName,ngl::ShaderType::VERTEX);
-   shader->attachShader(FragmentName,ngl::ShaderType::FRAGMENT);
-   // attach the source
-   shader->loadShaderSource(VertexName,"shaders/IMguiVertex.glsl");
-   shader->loadShaderSource(FragmentName,"shaders/IMguiFragment.glsl");
-   // compile the shaders
-   shader->compileShader(VertexName);
-   shader->compileShader(FragmentName);
-   // add them to the program
-   shader->attachShaderToProgram(ShaderName,VertexName);
-   shader->attachShaderToProgram(ShaderName,FragmentName);
+  shader->createShaderProgram(ShaderName);
+  // now we are going to create empty shaders for Frag and Vert
+  shader->attachShader(VertexName,ngl::ShaderType::VERTEX);
+  shader->attachShader(FragmentName,ngl::ShaderType::FRAGMENT);
+  // attach the source
+  shader->loadShaderSource(VertexName,"shaders/IMguiVertex.glsl");
+  shader->loadShaderSource(FragmentName,"shaders/IMguiFragment.glsl");
+  // compile the shaders
+  shader->compileShader(VertexName);
+  shader->compileShader(FragmentName);
+  // add them to the program
+  shader->attachShaderToProgram(ShaderName,VertexName);
+  shader->attachShaderToProgram(ShaderName,FragmentName);
 
-   // now we have associated this data we can link the shader
-   shader->linkProgramObject(ShaderName);
-   // and make it active ready to load values
-   (*shader)[ShaderName]->use();
+  // now we have associated this data we can link the shader
+  shader->linkProgramObject(ShaderName);
+  // and make it active ready to load values
+  (*shader)[ShaderName]->use();
 
+  glGenBuffers(1, &g_VboHandle);
+  glGenBuffers(1, &g_ElementsHandle);
 
+  glGenVertexArrays(1, &g_VaoHandle);
+  glBindVertexArray(g_VaoHandle);
+  glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
 
-    glGenBuffers(1, &g_VboHandle);
-    glGenBuffers(1, &g_ElementsHandle);
-
-    glGenVertexArrays(1, &g_VaoHandle);
-    glBindVertexArray(g_VaoHandle);
-    glBindBuffer(GL_ARRAY_BUFFER, g_VboHandle);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
-
-#define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
+  #define OFFSETOF(TYPE, ELEMENT) ((size_t)&(((TYPE *)0)->ELEMENT))
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, pos));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, uv));
     glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert), (GLvoid*)OFFSETOF(ImDrawVert, col));
-#undef OFFSETOF
+  #undef OFFSETOF
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
 
-    ImGui_ImplSdlGL3_CreateFontsTexture();
+  ImGui_ImplSdlGL3_CreateFontsTexture();
 
-    // Restore modified GL state
-    glBindTexture(GL_TEXTURE_2D, last_texture);
-    glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
-    glBindVertexArray(last_vertex_array);
+  // Restore modified GL state
+  glBindTexture(GL_TEXTURE_2D, last_texture);
+  glBindBuffer(GL_ARRAY_BUFFER, last_array_buffer);
+  glBindVertexArray(last_vertex_array);
 
-    return true;
+  return true;
 }
 
-void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
+void    ImGuiImplSdlInvalidateDeviceObjects()
 {
     if (g_VaoHandle) glDeleteVertexArrays(1, &g_VaoHandle);
     if (g_VboHandle) glDeleteBuffers(1, &g_VboHandle);
     if (g_ElementsHandle) glDeleteBuffers(1, &g_ElementsHandle);
     g_VaoHandle = g_VboHandle = g_ElementsHandle = 0;
-/*
-    glDetachShader(g_ShaderHandle, g_VertHandle);
-    glDeleteShader(g_VertHandle);
-    g_VertHandle = 0;
-
-    glDetachShader(g_ShaderHandle, g_FragHandle);
-    glDeleteShader(g_FragHandle);
-    g_FragHandle = 0;
-
-    glDeleteProgram(g_ShaderHandle);
-    g_ShaderHandle = 0;
-*/
     if (g_FontTexture)
     {
         glDeleteTextures(1, &g_FontTexture);
@@ -284,7 +267,7 @@ void    ImGui_ImplSdlGL3_InvalidateDeviceObjects()
     }
 }
 
-bool    ImGui_ImplSdlGL3_Init(SDL_Window* window)
+bool    ImGuiImplSdlInit(SDL_Window* window)
 {
     ImGuiIO& io = ImGui::GetIO();
     io.KeyMap[ImGuiKey_Tab] = SDLK_TAB;                     // Keyboard mapping. ImGui will use those indices to peek into the io.KeyDown[] array.
@@ -323,16 +306,16 @@ bool    ImGui_ImplSdlGL3_Init(SDL_Window* window)
     return true;
 }
 
-void ImGui_ImplSdlGL3_Shutdown()
+void ImGuiImplSdlShutdown()
 {
-    ImGui_ImplSdlGL3_InvalidateDeviceObjects();
+    ImGuiImplSdlInvalidateDeviceObjects();
     ImGui::Shutdown();
 }
 
-void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window)
+void ImGuiImplSdlNewFrame(SDL_Window* window)
 {
     if (!g_FontTexture)
-        ImGui_ImplSdlGL3_CreateDeviceObjects();
+        ImGuiImplSdlGL3CreateDeviceObjects();
 
     ImGuiIO& io = ImGui::GetIO();
 
@@ -341,15 +324,13 @@ void ImGui_ImplSdlGL3_NewFrame(SDL_Window* window)
     int display_w, display_h;
     SDL_GetWindowSize(window, &w, &h);
     SDL_GL_GetDrawableSize(window, &display_w, &display_h);
-    io.DisplaySize = ImVec2((float)w, (float)h);
+    io.DisplaySize = ImVec2(w, h);
     io.DisplayFramebufferScale = ImVec2(w > 0 ? ((float)display_w / w) : 0, h > 0 ? ((float)display_h / h) : 0);
-    std::cout<<"io.DisplaySize "<<io.DisplaySize.x<<" "<<io.DisplaySize.y<<" io.DisplayFramebufferScale "<<io.DisplayFramebufferScale.x<<" "<<io.DisplayFramebufferScale.y<<'\n';
     // Setup time step
     Uint32	time = SDL_GetTicks();
     double current_time = time / 1000.0;
     io.DeltaTime = g_Time > 0.0 ? (float)(current_time - g_Time) : (float)(1.0f / 60.0f);
     g_Time = current_time;
-    std::cout<<io.DeltaTime<<'\n';
     // Setup inputs
     // (we already got mouse wheel, keyboard keys & characters from SDL_PollEvent())
     int mx, my;
