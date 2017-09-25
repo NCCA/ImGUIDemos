@@ -130,15 +130,15 @@ void NGLDraw::loadMatricesToShader()
   t.setRotation(m_modelRot);
   t.setPosition(m_modelPosition);
   t.setScale(m_modelScale);
-  M=m_localScale*t.getMatrix()*m_mouseGlobalTX;
-  MV=  M*m_cam.getViewMatrix();
-  MVP= M*m_cam.getVPMatrix();
+  M=m_mouseGlobalTX*t.getMatrix()*m_localScale;
+  MV=  m_cam.getViewMatrix()*M;
+  MVP= m_cam.getVPMatrix()*M;
   normalMatrix=MV;
-  normalMatrix.inverse();
-  shader->setShaderParamFromMat4("MV",MV);
-  shader->setShaderParamFromMat4("MVP",MVP);
-  shader->setShaderParamFromMat3("normalMatrix",normalMatrix);
-  shader->setShaderParamFromMat4("M",M);
+  normalMatrix.inverse().transpose();
+  shader->setUniform("MV",MV);
+  shader->setUniform("MVP",MVP);
+  shader->setUniform("normalMatrix",normalMatrix);
+  shader->setUniform("M",M);
 }
 
 void NGLDraw::setLight(const ngl::Vec4 &_position,const ngl::Vec4 &_ambient,const ngl::Vec4 &_specular,const ngl::Vec4 &_diffuse )

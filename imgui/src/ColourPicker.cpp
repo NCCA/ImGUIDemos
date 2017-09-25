@@ -138,7 +138,6 @@ bool ColorSelector(const char* pLabel, ngl::Vec4 &oRGBA)
 					ImGui::EndTooltip();
 				}
 
-				ImVec2 pos = ImVec2(0, 0);
 				ImVec4 c00(1, 1, 1, 1);
 				ImVec4 c01(1, 1, 1, 1);
 				ImVec4 c10(1, 1, 1, 1);
@@ -196,7 +195,6 @@ bool ColorSelector(const char* pLabel, ngl::Vec4 &oRGBA)
 					ImGui::EndTooltip();
 				}
 
-				ImVec2 pos = ImVec2(0, 0);
 				ImVec4 c0(1, 1, 1, 1);
 				ImVec4 c1(1, 1, 1, 1);
 

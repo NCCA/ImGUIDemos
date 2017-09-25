@@ -107,8 +107,8 @@ class NGLDraw
     /// @brief a simple light use to illuminate the screen
     //----------------------------------------------------------------------------------------------------------------------
     ngl::Vec3 m_modelRot={0.0f,0.0f,0.0f};
-    ngl::Vec3 m_modelScale={1.0f,1.0f,1.0f};
-    ngl::Vec3 m_modelPosition={0.0f,0.0f,0.0f};
+    ngl::Vec3 m_modelScale=ngl::Vec3(1.0f,1.0f,1.0f);
+    ngl::Vec3 m_modelPosition=ngl::Vec3(0.0f,0.0f,0.0f);
     int m_modelID=0;
     ngl::Mat4 m_localScale;
     bool m_wireframe=false;
