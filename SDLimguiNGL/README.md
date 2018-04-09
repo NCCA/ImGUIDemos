@@ -1,4 +1,4 @@
-#SDL NGL imgui
+# SDL NGL imgui
 ![alt tag](http://nccastaff.bournemouth.ac.uk/jmacey/GraphicsLib/Demos/imgui.png)
 
 This demo shows how to integrate the excellent [imgui](https://github.com/ocornut/imgui) into NGL with a basic SDL demo.

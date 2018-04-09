@@ -9,8 +9,10 @@
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
 #include <ngl/NGLStream.h>
+#include <ngl/Transformation.h>
+#include <QtImGui.h>
 #include <imgui.h>
-#include "ImGUIImpl.h"
+
 extern bool ColorSelector(const char* pLabel, ngl::Vec4& oRGBA);
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -38,13 +40,7 @@ NGLScene::~NGLScene()
   std::cout<<"Shutting down NGL, removing VAO's and Shaders\n";
 }
 
-void NGLScene::resizeGL(QResizeEvent *_event)
-{
-  m_width=static_cast<int>(_event->size().width()*devicePixelRatio());
-  m_height=static_cast<int>(_event->size().height()*devicePixelRatio());
-  // now set the camera size values as the screen size has changed
-  m_cam.setShape(45.0f,static_cast<float>(width())/height(),0.05f,350.0f);
-}
+
 
 void NGLScene::resizeGL(int _w , int _h)
 {
@@ -53,9 +49,31 @@ void NGLScene::resizeGL(int _w , int _h)
   m_height=static_cast<int>(_h*devicePixelRatio());
 }
 
+void NGLScene::setLight(const ngl::Vec4 &_position,const ngl::Vec4 &_ambient,const ngl::Vec4 &_specular,const ngl::Vec4 &_diffuse )
+{
+  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  shader->use("Phong");
+  shader->setUniform("light.position",_position);
+  shader->setUniform("light.ambient",_ambient);
+  shader->setUniform("light.specular",_specular);
+  shader->setUniform("light.diffuse",_diffuse);
+
+}
+
+void NGLScene::setMaterial(const ngl::Vec4 &_ambient,const ngl::Vec4 &_specular,const ngl::Vec4 &_diffuse, float _specPower )
+{
+  ngl::ShaderLib *shader=ngl::ShaderLib::instance();
+  shader->use("Phong");
+  shader->setUniform("material.ambient",_ambient);
+  shader->setUniform("material.specular",_specular);
+  shader->setUniform("material.diffuse",_diffuse);
+  shader->setUniform("material.shininess",_specPower);
+}
 
 void NGLScene::initializeGL()
 {
+  QtImGui::initialize(this);
+
   // we must call that first before any other GL commands to load and link the
   // gl commands from the lib, if that is not done program will crash
   ngl::NGLInit::instance();
@@ -120,7 +138,6 @@ void NGLScene::initializeGL()
   // load these values to the shader as well
   light.loadToShader("light");
 
-  ImGui_ImplQt_Init();
 
 }
 
@@ -128,27 +145,22 @@ void NGLScene::drawIMGUI()
 {
 
 
-  ImGui_ImplQt_NewFrame(this);
+  QtImGui::newFrame();
   if(showModelControls)
   {
-      static ngl::Vec3 rot(0,0,0);
-      static ngl::Vec3 pos(0,0,0);
-      static ngl::Vec3 scale(1,1,1);
-      static ngl::Vec4 clearColour= {0.5,0.5,0.5,1.0};
 
       ImGui::Begin("Model");
-      ImGui::SliderFloat3("rotation",rot.openGL(),-180.0f,180.f);
-      ImGui::SliderFloat3("position",pos.openGL(),-10.0f,10.f);
-      ImGui::SliderFloat3("scale",scale.openGL(),-2.0f,2.f);
+      ImGui::SliderFloat3("rotation",m_modelRot.openGL(),-180.0f,180.f);
+      ImGui::SliderFloat3("position",m_modelPosition.openGL(),-10.0f,10.f);
+      ImGui::SliderFloat3("scale",m_modelScale.openGL(),-2.0f,2.f);
 
       //ImGui::ColorEdit3("clear color", clearColour.openGL());
-      ColorSelector("clear color",clearColour);
+      ColorSelector("clear color",m_clearColour);
       const char* items[]={ "Teapot", "Troll", "Bunny", "Dragon", "Buddah", "Cube" };
-      static int modelID = 0;
-      ImGui::Combo("Model", &modelID, items,6);   // Combo using proper array. You can also pass a callback to retrieve array value, no need to create/copy an array just for that.
+      ImGui::Combo("Model", &m_modelID, items,6);   // Combo using proper array. You can also pass a callback to retrieve array value, no need to create/copy an array just for that.
 
       ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-      glClearColor(clearColour.m_r,clearColour.m_g,clearColour.m_b,clearColour.m_a);
+      glClearColor(m_clearColour.m_r,m_clearColour.m_g,m_clearColour.m_b,m_clearColour.m_a);
       ImGui::End();
 
   }
@@ -163,6 +175,7 @@ void NGLScene::drawIMGUI()
       ImGui::ColorEdit3("Ambient", ambient.openGL());
       ImGui::ColorEdit3("Specular", specular.openGL());
       ImGui::ColorEdit3("Diffuse", diffuse.openGL());
+      setLight(position,ambient,specular,diffuse);
       ImGui::End();
 
   }
@@ -177,6 +190,7 @@ void NGLScene::drawIMGUI()
       ImGui::ColorEdit3("Specular", specular.openGL());
       ImGui::ColorEdit3("Diffuse", diffuse.openGL());
       ImGui::SliderFloat("Cos Power", &specPower,0.0f,200.0f);
+      setMaterial(ambient,specular,diffuse,specPower);
 
       ImGui::End();
 
@@ -191,19 +205,23 @@ void NGLScene::loadMatricesToShader()
 {
   ngl::ShaderLib *shader=ngl::ShaderLib::instance();
 
-  ngl::Mat4 MV;
-  ngl::Mat4 MVP;
-  ngl::Mat3 normalMatrix;
-  ngl::Mat4 M;
-  M=m_mouseGlobalTX;
-  MV=  M*m_cam.getViewMatrix();
-  MVP= M*m_cam.getVPMatrix();
-  normalMatrix=MV;
-  normalMatrix.inverse();
-  shader->setShaderParamFromMat4("MV",MV);
-  shader->setShaderParamFromMat4("MVP",MVP);
-  shader->setShaderParamFromMat3("normalMatrix",normalMatrix);
-  shader->setShaderParamFromMat4("M",M);
+   ngl::Mat4 MV;
+   ngl::Mat4 MVP;
+   ngl::Mat3 normalMatrix;
+   ngl::Mat4 M;
+   ngl::Transformation t;
+   t.setRotation(m_modelRot);
+   t.setPosition(m_modelPosition);
+   t.setScale(m_modelScale);
+   M=m_mouseGlobalTX*t.getMatrix()*m_localScale;
+   MV=  m_cam.getViewMatrix()*M;
+   MVP= m_cam.getVPMatrix()*M;
+   normalMatrix=MV;
+   normalMatrix.inverse().transpose();
+   shader->setUniform("MV",MV);
+   shader->setUniform("MVP",MVP);
+   shader->setUniform("normalMatrix",normalMatrix);
+   shader->setUniform("M",M);
 }
 
 void NGLScene::paintGL()
@@ -233,7 +251,16 @@ void NGLScene::paintGL()
   ngl::VAOPrimitives *prim=ngl::VAOPrimitives::instance();
   // draw
   loadMatricesToShader();
-  prim->draw("teapot");
+  switch(m_modelID)
+     {
+      case 0 : m_localScale.scale(1.0f, 1.0f, 1.0f); prim->draw("teapot"); break;
+      case 1 : m_localScale.scale(1.0f, 1.0f, 1.0f); prim->draw("troll"); break;
+      case 2 : m_localScale.scale(0.1f, 0.1f, 0.1f); prim->draw("bunny"); break;
+      case 3 : m_localScale.scale(0.1f, 0.1f, 0.1f); prim->draw("dragon"); break;
+      case 4 : m_localScale.scale(0.1f, 0.1f, 0.1f); prim->draw("buddah"); break;
+      case 5 : m_localScale.scale(1.0f, 1.0f, 1.0f); prim->draw("cube"); break;
+
+    }
   drawIMGUI();
 
 }
@@ -255,92 +282,91 @@ void NGLScene::setMouseState(QMouseEvent *_event)
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mouseMoveEvent (QMouseEvent * _event)
 {
-  setMouseState(_event);
-  ImGui_ImplQt_ProcessEvent(this);
-  // note the method buttons() is the button state when event was called
-  // that is different from button() which is used to check which button was
-  // pressed when the mousePress/Release event is generated
-  if(m_rotate && _event->buttons() == Qt::LeftButton)
-  {
-    int diffx=_event->x()-m_origX;
-    int diffy=_event->y()-m_origY;
-    m_spinXFace += static_cast<int>( 0.5f * diffy);
-    m_spinYFace += static_cast<int>( 0.5f * diffx);
-    m_origX = _event->x();
-    m_origY = _event->y();
-    update();
+//  setMouseState(_event);
+//  // note the method buttons() is the button state when event was called
+//  // that is different from button() which is used to check which button was
+//  // pressed when the mousePress/Release event is generated
+//  if(m_rotate && _event->buttons() == Qt::LeftButton)
+//  {
+//    int diffx=_event->x()-m_origX;
+//    int diffy=_event->y()-m_origY;
+//    m_spinXFace += static_cast<int>( 0.5f * diffy);
+//    m_spinYFace += static_cast<int>( 0.5f * diffx);
+//    m_origX = _event->x();
+//    m_origY = _event->y();
+//    update();
 
-  }
-        // right mouse translate code
-  else if(m_translate && _event->buttons() == Qt::RightButton)
-  {
-    int diffX = static_cast<int>(_event->x() - m_origXPos);
-    int diffY = static_cast<int>(_event->y() - m_origYPos);
-    m_origXPos=_event->x();
-    m_origYPos=_event->y();
-    m_modelPos.m_x += INCREMENT * diffX;
-    m_modelPos.m_y -= INCREMENT * diffY;
-    update();
+//  }
+//        // right mouse translate code
+//  else if(m_translate && _event->buttons() == Qt::RightButton)
+//  {
+//    int diffX = static_cast<int>(_event->x() - m_origXPos);
+//    int diffY = static_cast<int>(_event->y() - m_origYPos);
+//    m_origXPos=_event->x();
+//    m_origYPos=_event->y();
+//    m_modelPos.m_x += INCREMENT * diffX;
+//    m_modelPos.m_y -= INCREMENT * diffY;
+//    update();
 
-   }
+//   }
+  update();
 }
 
 
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mousePressEvent ( QMouseEvent * _event)
 {
-  setMouseState(_event);
-  ImGui_ImplQt_ProcessEvent(this);
-  // that method is called when the mouse button is pressed in this case we
-  // store the value where the maouse was clicked (x,y) and set the Rotate flag to true
-  if(_event->button() == Qt::LeftButton)
-  {
-    m_origX = _event->x();
-    m_origY = _event->y();
-    m_rotate =true;
-  }
-  // right mouse translate mode
-  else if(_event->button() == Qt::RightButton)
-  {
-    m_origXPos = _event->x();
-    m_origYPos = _event->y();
-    m_translate=true;
-  }
-
+//  setMouseState(_event);
+//  // that method is called when the mouse button is pressed in this case we
+//  // store the value where the maouse was clicked (x,y) and set the Rotate flag to true
+//  if(_event->button() == Qt::LeftButton)
+//  {
+//    m_origX = _event->x();
+//    m_origY = _event->y();
+//    m_rotate =true;
+//  }
+//  // right mouse translate mode
+//  else if(_event->button() == Qt::RightButton)
+//  {
+//    m_origXPos = _event->x();
+//    m_origYPos = _event->y();
+//    m_translate=true;
+//  }
+update();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::mouseReleaseEvent ( QMouseEvent * _event )
 {
-  setMouseState(_event);
-  ImGui_ImplQt_ProcessEvent(this);
-  // that event is called when the mouse button is released
-  // we then set Rotate to false
-  if (_event->button() == Qt::LeftButton)
-  {
-    m_rotate=false;
-  }
-        // right mouse translate mode
-  if (_event->button() == Qt::RightButton)
-  {
-    m_translate=false;
-  }
+//  setMouseState(_event);
+//  // that event is called when the mouse button is released
+//  // we then set Rotate to false
+//  if (_event->button() == Qt::LeftButton)
+//  {
+//    m_rotate=false;
+//  }
+//        // right mouse translate mode
+//  if (_event->button() == Qt::RightButton)
+//  {
+//    m_translate=false;
+//  }
+update();
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 void NGLScene::wheelEvent(QWheelEvent *_event)
 {
 
-	// check the diff of the wheel position (0 means no change)
-	if(_event->delta() > 0)
-	{
-		m_modelPos.m_z+=ZOOM;
-	}
-	else if(_event->delta() <0 )
-	{
-		m_modelPos.m_z-=ZOOM;
-	}
-	update();
+//	// check the diff of the wheel position (0 means no change)
+//	if(_event->delta() > 0)
+//	{
+//		m_modelPos.m_z+=ZOOM;
+//	}
+//	else if(_event->delta() <0 )
+//	{
+//		m_modelPos.m_z-=ZOOM;
+//	}
+  update();
 }
 //----------------------------------------------------------------------------------------------------------------------
 

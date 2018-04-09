@@ -1,4 +1,4 @@
-#imgui demos
+# imgui demos
 ![alt tag](http://nccastaff.bournemouth.ac.uk/jmacey/GraphicsLib/Demos/imgui.png)
 
 These demos shows how to integrate the excellent [imgui](https://github.com/ocornut/imgui) into NGL with a series of demos and methods to create.

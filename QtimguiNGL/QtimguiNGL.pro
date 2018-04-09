@@ -18,18 +18,22 @@ CONFIG-=app_bundle
 SOURCES+= $$PWD/src/NGLScene.cpp    \
           $$PWD/../imgui/src/imgui.cpp \
           $$PWD/../imgui/src/imgui_draw.cpp \
-          $$PWD/src/ImGUIImpl.cpp \
+#          $$PWD/src/ImGUIImpl.cpp \
           $$PWD/../imgui/src/ColourPicker.cpp \
+          $$PWD/src/ImGuiRenderer.cpp \
+          $$PWD/src/QtImGui.cpp \
 					$$PWD/src/main.cpp
 # same for the .h files
 HEADERS+= $$PWD/include/NGLScene.h \
+          $$PWD/include/QtImGui.h \
+          $$PWD/include/ImGuiRenderer.h \
           $$PWD/../imgui/include/imgui.h \
           $$PWD/../imgui/include/stb_rect_pack.h \
           $$PWD/../imgui/include/stb_truetype.h \
           $$PWD/../imgui/include/imconfig.h \
           $$PWD/../imgui/include/imgui_internal.h \
           $$PWD/../imgui/include/stb_textedit.h \
-          $$PWD/include/ImGUIImpl.h
+#          $$PWD/include/ImGUIImpl.h
 
 # and add the include dir into the search path for Qt and make
 INCLUDEPATH +=./include
