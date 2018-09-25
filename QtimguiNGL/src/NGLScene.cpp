@@ -2,9 +2,6 @@
 #include <QMouseEvent>
 #include <QGuiApplication>
 
-#include <ngl/Camera.h>
-#include <ngl/Light.h>
-#include <ngl/Material.h>
 #include <ngl/NGLInit.h>
 #include <ngl/VAOPrimitives.h>
 #include <ngl/ShaderLib.h>
