@@ -1,6 +1,5 @@
 #include "imgui.h"
 #include "imgui_internal.h"
-#include <ngl/Colour.h>
 #include <ngl/Vec4.h>
 // based on https://gist.github.com/thennequin/a21d5769bdcaa4d0992e
 ImVec4 nglColorToImVec4(const ngl::Vec4 &_c)

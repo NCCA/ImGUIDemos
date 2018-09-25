@@ -1,12 +1,11 @@
 #include "NGLDraw.h"
 #include <ngl/ShaderLib.h>
 #include <ngl/NGLInit.h>
-#include <ngl/Material.h>
 #include <ngl/Transformation.h>
 
 
-const static float INCREMENT=0.01;
-const static float ZOOM=0.05;
+const static float INCREMENT=0.01f;
+const static float ZOOM=0.05f;
 NGLDraw::NGLDraw()
 {
   m_rotate=false;
@@ -47,15 +46,15 @@ NGLDraw::NGLDraw()
   // Now we will create a basic Camera from the graphics library
   // This is a static camera so it only needs to be set once
   // First create Values for the camera position
-  ngl::Vec3 from(0,1,1);
+  ngl::Vec3 from(0,1,5);
   ngl::Vec3 to(0,0,0);
   ngl::Vec3 up(0,1,0);
   // now load to our new camera
-  m_cam.set(from,to,up);
+  m_view=ngl::lookAt(from,to,up);
   // set the shape using FOV 45 Aspect Ratio based on Width and Height
   // The final two are near and far clipping planes of 0.5 and 10
-  m_cam.setShape(45.0f,720.0f/576.0f,0.05f,350.0f);
-  shader->setUniform("viewerPos",m_cam.getEye().toVec3());
+  m_project=ngl::perspective(45.0f,720.0f/576.0f,0.05f,350.0f);
+  shader->setUniform("viewerPos",from);
   setLight(ngl::Vec4(-2.0f,5.0f,2.0f),ngl::Vec4::zero(),ngl::Vec4(1.0f,1.0f,1.0f),ngl::Vec4(1.0f,1.0f,1.0f));
 
   setMaterial({0.274725f,0.1995f,0.0745f},{0.628281f, 0.555802f,0.3666065f},{0.75164f,0.60648f,0.22648f},51.2f);
@@ -71,7 +70,7 @@ void NGLDraw::resize(int _w, int _h)
 {
   glViewport(0,0,_w,_h);
   // now set the camera size values as the screen size has changed
-  m_cam.setShape(45.0f,static_cast<float>(_w)/_h,0.05f,350.0f);
+  m_project=ngl::perspective(45.0f,static_cast<float>(_w)/_h,0.05f,350.0f);
 }
 
 void NGLDraw::draw()
@@ -131,8 +130,8 @@ void NGLDraw::loadMatricesToShader()
   t.setPosition(m_modelPosition);
   t.setScale(m_modelScale);
   M=m_mouseGlobalTX*t.getMatrix()*m_localScale;
-  MV=  m_cam.getViewMatrix()*M;
-  MVP= m_cam.getVPMatrix()*M;
+  MV=  m_view*M;
+  MVP= m_project*MV;
   normalMatrix=MV;
   normalMatrix.inverse().transpose();
   shader->setUniform("MV",MV);

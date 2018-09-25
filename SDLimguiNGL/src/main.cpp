@@ -3,6 +3,7 @@
 #include <iostream>
 #include "NGLDraw.h"
 #include <ngl/NGLInit.h>
+#include <ngl/Vec4.h>
 #include <array>
 #include <imgui.h>
 #include "ImGUIImpl.h"
